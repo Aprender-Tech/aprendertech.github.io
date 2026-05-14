@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Práctica para marcar texto</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      background: #f5f5f5;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .app {
+      background: white;
+      max-width: 900px;
+      width: 100%;     
+      padding: 24px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      margin-bottom: 8px;
+      text-align: center;
+    }
+
+    .subtitle {
+      text-align: center;
+      font-size: 0.95rem;
+      color: #555;
+      margin-bottom: 20px;
+    }
+
+    .instruction-box {
+      background: #faf1e8;
+      border-left: 4px solid #2f6fed;
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      margin-bottom: 16px;
+    }
+
+    .instruction-box strong {
+      font-weight: 700;
+    }
+
+    .passage {
+      background: #fafafa;
+      border-radius: 8px;
+      padding: 16px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      line-height: 1.6;
+      cursor: text;
+      user-select: text;
+      margin-bottom: 16px;
+    }
+
+    .hint {
+      font-size: 0.9rem;
+      color: #666;
+      margin-bottom: 12px;
+    }
+
+    .feedback {
+      min-height: 24px;
+      font-size: 1rem;
+      margin-bottom: 16px;
+      font-weight: 600;
+    }
+
+    .feedback.correct {
+      color: #1a7f37;
+    }
+
+    .feedback.incorrect {
+      color: #b3261e;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      font-size: 1rem;
+      padding: 10px 18px;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      background: #2f6fed;
+      color: white;
+    }
+
+    button.secondary {
+      background: #dddddd;
+      color: #333;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+
+    @media (max-width: 600px) {
+      .app {
+        padding: 16px;
+      }
+      .passage {
+        font-size: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <h1>Práctica para marcar texto</h1>
+    <div class="subtitle">
+      Use el panel táctil para marcar la palabra o la frase correcta.
+    </div>
+
+    <div class="instruction-box" id="instructionBox"></div>
+
+    <div class="hint">
+      Consejo: Presione en el panel táctil, arrastre sobre el texto y luego suelte.
+    </div>
+
+    <div class="passage" id="passage" tabindex="0"></div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="buttons">
+      <button id="checkButton">Revisar Texto</button>
+      <button id="nextButton" class="secondary" disabled>Siguiente</button>
+      <button id="showAnswerButton" class="secondary">Mostrar Ayuda</button>
+    </div>
+  </div>
+
+  <script>
+    // LISTA DE EJERCICIOS
+    const challenges = [
+      {
+        type: "word",
+        target: "computadora",
+        passage:
+          "Computadora"
+      },
+      {
+        type: "phrase",
+        target: "correo electrónico",
+        passage:
+          "correo electrónico"
+      },
+      {
+        type: "word",
+        target: "ratón",
+        passage:
+          "ratón"
+      },
+      {
+        type: "phrase",
+        target: "Google Chrome",
+        passage:
+          "Google Chrome"
+      },
+      {
+        type: "word",
+        target: "clic",
+        passage:
+          "clic"
+      },
+      {
+        type: "phrase",
+        target: "página web",
+        passage:
+          "página web"
+      },
+       {
+        type: "phrase",
+        target: "panel tactil",
+        passage:
+          "panel tactil"
+      },
+      {
+        type: "phrase",
+        target: "computadora\ninternet\nteclado\nimpresora\nmonitor"
+  
+      }
+    ];
+
+    let currentIndex = 0;
+
+    const instructionBox = document.getElementById("instructionBox");
+    const passageDiv = document.getElementById("passage");
+    const feedbackDiv = document.getElementById("feedback");
+    const checkButton = document.getElementById("checkButton");
+    const nextButton = document.getElementById("nextButton");
+    const showAnswerButton = document.getElementById("showAnswerButton");
+
+    function normalize(text) {
+      return text
+        .toLowerCase()
+        .replace(/[.,!?;:()"']/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    function loadChallenge(index) {
+      const challenge = challenges[index];
+      const hasLineBreaks = challenge.target.includes("\n");
+
+      if (hasLineBreaks) {
+        const items = challenge.target
+          .split("\n")
+          .map(w => w.trim())
+          .filter(Boolean)
+          .map(w => `<strong>${w}</strong>`)
+          .join("<br>");
+
+        instructionBox.innerHTML =
+          `Instrucciónes: Resalta todas estas palabras en la lista a la vez:<br><br>${items}`;
+      } else {
+        const targetLabel =
+          challenge.type === "word" ? "la palabra" : "la frase";
+
+        instructionBox.innerHTML =
+          `Instrucciónes: Resalta ${targetLabel} '${challenge.target}' abajo, y luego presione el botón azul 'Revisar Texto'.`;
+      }
+
+      passageDiv.textContent = challenge.passage;
+      feedbackDiv.textContent = "";
+      feedbackDiv.className = "feedback";
+
+      nextButton.disabled = true;
+      nextButton.classList.add("secondary");
+
+      window.getSelection().removeAllRanges();
+    }
+
+    function checkSelection() {
+      const selection = window.getSelection().toString();
+      if (!selection) {
+        feedbackDiv.textContent = "No marcó texto. Por favor intente otra vez.";
+        feedbackDiv.className = "feedback incorrect";
+        nextButton.disabled = true;
+        nextButton.classList.add("secondary");
+        return;
+      }
+
+      const challenge = challenges[currentIndex];
+      const hasLineBreaks = challenge.target.includes("\n");
+
+      // MULTI-WORD STRICT MATCH
+      if (hasLineBreaks) {
+        const selectedNorm = normalize(selection);
+
+        const words = challenge.target
+          .split("\n")
+          .map(w => normalize(w))
+          .filter(Boolean);
+
+        const targetJoined = words.join(" "); // strict order exact match
+
+        const exactMatch = selectedNorm === targetJoined;
+
+        if (exactMatch) {
+          feedbackDiv.textContent = "✅ ¡Muy bien! Marcó todas las palabras juntas.";
+          feedbackDiv.className = "feedback correct";
+          nextButton.disabled = false;
+          nextButton.classList.remove("secondary");
+        } else {
+          feedbackDiv.textContent =
+            "❌ No es correcto. Debe marcar SOLO las palabras indicadas, sin texto adicional.";
+          feedbackDiv.className = "feedback incorrect";
+          nextButton.disabled = true;
+          nextButton.classList.add("secondary");
+        }
+        return;
+      }
+
+      // NORMAL SINGLE WORD OR PHRASE
+      const selectedNorm = normalize(selection);
+      const targetNorm = normalize(challenge.target);
+
+      if (selectedNorm === targetNorm) {
+        feedbackDiv.textContent = "✅ ¡Muy bien! Marcó el texto correcto." 
+        feedbackDiv.className = "feedback correct";
+        nextButton.disabled = false;
+        nextButton.classList.remove("secondary");
+      } else {
+        feedbackDiv.textContent =
+          `❌ No es correcto. Usted marcó: "${selection}". Inténtelo de nuevo.`;
+        feedbackDiv.className = "feedback incorrect";
+        nextButton.disabled = true;
+        nextButton.classList.add("secondary");
+      }
+    }
+
+    function nextChallenge() {
+      currentIndex = (currentIndex + 1) % challenges.length;
+      loadChallenge(currentIndex);
+    }
+
+    function showAnswer() {
+      const challenge = challenges[currentIndex];
+
+      if (challenge.target.includes("\n")) {
+        alert(`Textos objetivo (todas juntas):\n\n` + challenge.target);
+      } else {
+        alert(`Texto objetivo: "${challenge.target}"`);
+      }
+    }
+
+    checkButton.addEventListener("click", checkSelection);
+    nextButton.addEventListener("click", nextChallenge);
+    showAnswerButton.addEventListener("click", showAnswer);
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") checkSelection();
+    });
+
+    loadChallenge(currentIndex);
+  </script>
+</body>
+</html>

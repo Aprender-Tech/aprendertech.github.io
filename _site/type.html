@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Práctica de Escritura - Computadoras</title>
+
+<style>
+
+body{
+    font-family: Arial, sans-serif;
+    text-align:center;
+    background:#eef6ff;
+    padding:40px;
+}
+
+h1{
+    color:#2c3e50;
+}
+
+#sentence{
+    font-size:22px;
+    margin:30px;
+    padding:20px;
+    background:white;
+    border-radius:8px;
+}
+
+input{
+    width:70%;
+    font-size:20px;
+    padding:10px;
+}
+
+#message{
+    font-size:22px;
+    margin-top:20px;
+    font-weight:bold;
+}
+
+#progress{
+    margin-top:20px;
+    font-size:18px;
+}
+
+</style>
+</head>
+
+<body>
+
+<h1>Práctica de Escritura en el Teclado</h1>
+
+<p>Escribe la oración exactamente como aparece.</p>
+
+<div id="sentence"></div>
+
+<input id="input" type="text" placeholder="Escribe aquí..." autofocus>
+
+<div id="message"></div>
+<div id="progress"></div>
+
+<script>
+
+const sentences = [
+
+"Es importante escribir con buena postura y calma.",
+
+"La Tecla Shift Se Usa Para Escribir Letras Mayusculas.",
+
+"Mi correo electronico es estudiante123@escuela.edu.",
+
+"Hoy aprendi a escribir numeros como 1 2 3 4 5 en el teclado.",
+
+"Para escribir un simbolo como ! o ? usamos diferentes teclas.",
+
+"Se presiona Shift + 2 para escribir el simbolo @.",
+
+"LA TECLA CAPS LOCK BLOQUEA LAS LETRAS MAYUSCULAS.",
+
+"En el teclado tambien podemos escribir $ y %."
+
+];
+
+let current = 0;
+
+const sentenceDisplay = document.getElementById("sentence");
+const input = document.getElementById("input");
+const message = document.getElementById("message");
+const progress = document.getElementById("progress");
+
+function loadSentence(){
+    sentenceDisplay.textContent = sentences[current];
+    progress.textContent = "Oración " + (current+1) + " de " + sentences.length;
+}
+
+input.addEventListener("input", function(){
+
+    // ✅ FIX: remove trailing spaces before comparing
+    const userText = input.value.trimEnd();
+    const correctText = sentences[current].trimEnd();
+
+    if(userText === correctText){
+
+        message.textContent = "¡Muy bien!";
+        message.style.color = "green";
+
+        current++;
+
+        if(current >= sentences.length){
+            sentenceDisplay.textContent = "¡Terminaste la práctica!";
+            input.style.display = "none";
+            progress.textContent = "";
+        } else {
+            setTimeout(()=>{
+                input.value = "";
+                message.textContent = "";
+                loadSentence();
+            },800);
+        }
+
+    }
+
+});
+
+loadSentence();
+
+</script>
+
+</body>
+</html>
